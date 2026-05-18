@@ -46,7 +46,12 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="bg-ocp-light text-gray-800 min-h-screen flex flex-col">
+<body class="bg-ocp-light text-gray-800 min-h-screen flex flex-col relative z-0">
+
+    <!-- Subtle Background Seal Watermark -->
+    <div class="fixed bottom-4 left-4 z-[-1] pointer-events-none overflow-hidden">
+        <img src="https://cdn.rpeak.org/logos/Seal.svg" alt="" class="w-64 md:w-96 opacity-10 object-contain select-none">
+    </div>
 
     <!-- Header Navigation -->
     <header class="bg-white shadow-md border-b-4 border-ocp-orange">
