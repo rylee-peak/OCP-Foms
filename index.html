@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forms Portal | Office of Commissioner Rylee Peak</title>
+    
+    <!-- Google Fonts: League Spartan -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ocp: {
+                            light: '#E8F0FA',
+                            blue: '#004AAD',
+                            orange: '#F6921E'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"League Spartan"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    
+    <style>
+        /* Custom scrollbar and subtle transitions */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #E8F0FA; }
+        ::-webkit-scrollbar-thumb { background: #004AAD; border-radius: 4px; }
+        .view-section { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .loader { border: 3px solid #E8F0FA; border-top: 3px solid #F6921E; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-ocp-light text-gray-800 min-h-screen flex flex-col">
+
+    <!-- Header Navigation -->
+    <header class="bg-white shadow-md border-b-4 border-ocp-orange">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <img src="https://cdn.rpeak.org/logos/no-bg/svg/Commissioner%20Peak%20Logo-Trans.svg" alt="Commissioner Peak Logo" class="h-12 object-contain cursor-pointer" onclick="navigate('dashboard')">
+                <div class="hidden sm:block border-l-2 border-gray-200 h-10 pl-4">
+                    <h1 class="font-bold text-ocp-blue text-xl leading-tight">Office of Commissioner Rylee Peak</h1>
+                    <p class="text-sm text-gray-500 font-semibold tracking-wide uppercase">Official Forms Portal</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <img src="https://cdn.rpeak.org/logos/Seal.svg" alt="Official Seal" class="h-12 w-12 object-contain hidden md:block">
+                <div id="auth-nav-container">
+                    <!-- Auth buttons injected here -->
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow w-full max-w-6xl mx-auto px-4 py-8 relative">
+        
+        <!-- Global Loading State -->
+        <div id="global-loader" class="absolute inset-0 bg-ocp-light bg-opacity-80 z-50 flex flex-col items-center justify-center pt-20">
+            <div class="loader mb-4 w-12 h-12 border-4"></div>
+            <p class="text-ocp-blue font-bold text-lg">Loading Portal...</p>
+        </div>
+
+        <!-- 1. LOGIN VIEW -->
+        <section id="view-login" class="view-section max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg border border-gray-100 mt-10">
+            <h2 class="text-2xl font-bold text-ocp-blue mb-2 text-center">Portal Access</h2>
+            <p class="text-gray-500 mb-6 text-center text-sm">Sign in to view internal forms or manage submissions.</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-1 text-ocp-blue">Email Address</label>
+                    <input type="email" id="login-email" class="w-full px-4 py-2 rounded border border-gray-300 focus:border-ocp-orange focus:ring-1 focus:ring-ocp-orange outline-none" placeholder="name@example.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1 text-ocp-blue">Password</label>
+                    <input type="password" id="login-password" class="w-full px-4 py-2 rounded border border-gray-300 focus:border-ocp-orange focus:ring-1 focus:ring-ocp-orange outline-none" placeholder="••••••••">
+                </div>
+                
+                <div class="flex gap-2 pt-2">
+                    <button onclick="handleEmailLogin()" class="w-full bg-ocp-blue text-white font-semibold py-2 rounded hover:bg-blue-800 transition shadow">Log In</button>
+                </div>
+                
+                <div class="relative flex py-4 items-center">
+                    <div class="flex-grow border-t border-gray-200"></div>
+                    <span class="flex-shrink-0 mx-4 text-gray-400 text-sm">or</span>
+                    <div class="flex-grow border-t border-gray-200"></div>
+                </div>
+
+                <button onclick="handleGoogleLogin()" class="w-full border-2 border-gray-200 text-gray-700 font-semibold py-2 rounded flex items-center justify-center gap-2 hover:bg-gray-50 transition">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                    Continue with Google
+                </button>
+            </div>
+            <p id="login-error" class="text-red-500 text-sm mt-4 text-center hidden"></p>
+        </section>
+
+        <!-- 2. DASHBOARD VIEW -->
+        <section id="view-dashboard" class="view-section">
+            <div class="flex justify-between items-end mb-8 border-b pb-4 border-gray-300">
+                <div>
+                    <h2 class="text-3xl font-bold text-ocp-blue">Portal Dashboard</h2>
+                    <p class="text-gray-600 mt-1" id="dashboard-subtitle">Select a form below to submit a response.</p>
+                </div>
+                <div id="admin-actions" class="hidden">
+                    <button onclick="navigate('builder')" class="bg-ocp-orange text-white px-4 py-2 rounded shadow font-semibold hover:bg-orange-600 transition flex items-center gap-2">
+                        <span>+</span> Create New Form
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Left/Main Col: Forms List -->
+                <div class="md:col-span-2 space-y-4" id="forms-list">
+                    <!-- Forms injected here -->
+                </div>
+
+                <!-- Right Col: Responses/Info (User history) -->
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100 self-start" id="user-history-panel">
+                    <h3 class="text-xl font-bold text-ocp-blue mb-4 border-b pb-2">Your Submissions</h3>
+                    <div id="responses-list" class="space-y-3">
+                        <p class="text-sm text-gray-500 italic">Select a form to view your submitted responses.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. FORM BUILDER VIEW (Admin) -->
+        <section id="view-builder" class="view-section bg-white p-6 md:p-10 rounded-xl shadow-lg border-t-4 border-ocp-orange">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-ocp-blue">Form Builder</h2>
+                <button onclick="navigate('dashboard')" class="text-gray-500 hover:text-ocp-blue underline text-sm">Cancel</button>
+            </div>
+            
+            <div class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-1 text-ocp-blue">Form Title</label>
+                        <input type="text" id="builder-title" class="w-full px-4 py-2 rounded border border-gray-300 focus:border-ocp-orange outline-none" placeholder="e.g. Community Feedback Form">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1 text-ocp-blue">Visibility</label>
+                        <select id="builder-public" class="w-full px-4 py-2 rounded border border-gray-300 focus:border-ocp-orange outline-none bg-white">
+                            <option value="true">Public (Anyone can submit)</option>
+                            <option value="false">Internal (Staff Only)</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1 text-ocp-blue">Description / Instructions</label>
+                    <textarea id="builder-desc" rows="2" class="w-full px-4 py-2 rounded border border-gray-300 focus:border-ocp-orange outline-none" placeholder="Provide instructions for the user..."></textarea>
+                </div>
+
+                <!-- Field Editor -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-gray-700">Form Fields</h3>
+                        <button onclick="addBuilderField()" class="text-sm bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300 transition font-semibold">Add Field</button>
+                    </div>
+                    <div id="builder-fields-container" class="space-y-4">
+                        <!-- Fields injected here -->
+                    </div>
+                </div>
+
+                <div class="flex justify-end pt-4">
+                    <button onclick="saveForm()" class="bg-ocp-blue text-white px-6 py-2 rounded shadow font-semibold hover:bg-blue-800 transition">Save & Publish Form</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. FORM ADMIN VIEW (Specific Form Responses) -->
+        <section id="view-form-admin" class="view-section">
+            <button onclick="navigate('dashboard')" class="text-gray-500 hover:text-ocp-blue font-semibold mb-4 flex items-center gap-1">← Back to Dashboard</button>
+            
+            <div class="bg-white rounded-xl shadow-lg border-t-8 border-ocp-blue overflow-hidden mb-6">
+                <div class="p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h2 id="admin-form-title" class="text-3xl font-bold text-ocp-blue">Loading...</h2>
+                        <p class="text-sm text-gray-500 mt-1">Manage responses and share settings.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="previewActiveForm()" class="bg-gray-100 text-gray-700 border border-gray-300 px-4 py-2 rounded shadow-sm font-semibold hover:bg-gray-200 transition text-sm">Preview Form</button>
+                        <button onclick="openPrefillGenerator()" class="bg-ocp-light text-ocp-blue border border-ocp-blue px-4 py-2 rounded shadow-sm font-semibold hover:bg-ocp-blue hover:text-white transition text-sm">Generate Prefill Link</button>
+                        <button onclick="copyShareLink()" class="bg-ocp-light text-ocp-blue border border-ocp-blue px-4 py-2 rounded shadow-sm font-semibold hover:bg-ocp-blue hover:text-white transition text-sm">Copy Link</button>
+                        <button onclick="exportCSV()" class="bg-ocp-orange text-white px-4 py-2 rounded shadow font-semibold hover:bg-orange-600 transition text-sm flex items-center gap-2">Export CSV</button>
+                        <button onclick="deleteActiveForm()" class="bg-red-500 text-white px-4 py-2 rounded shadow font-semibold hover:bg-red-600 transition text-sm flex items-center gap-2">Delete Form</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
+                <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-gray-800">Responses (<span id="admin-response-count">0</span>)</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-gray-600">
+                        <thead class="bg-gray-50 text-gray-700 font-semibold border-b border-gray-200" id="admin-table-head">
+                            <!-- Headers Injected Here -->
+                        </thead>
+                        <tbody id="admin-table-body" class="divide-y divide-gray-100">
+                            <!-- Rows Injected Here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. FORM VIEWER VIEW (Taking the Form) -->
+        <section id="view-form" class="view-section max-w-3xl mx-auto bg-white rounded-xl shadow-lg border-t-8 border-ocp-blue overflow-hidden">
+            <div class="bg-gray-50 p-6 md:p-10 border-b border-gray-200">
+                <h2 id="viewer-title" class="text-3xl font-bold text-ocp-blue mb-2">Loading Form...</h2>
+                <p id="viewer-desc" class="text-gray-600 text-lg leading-relaxed"></p>
+                <div class="mt-4 flex gap-2 items-center" id="draft-indicator">
+                    <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                    <span class="text-xs text-gray-500 font-semibold tracking-wide uppercase">Draft Saved Locally</span>
+                </div>
+            </div>
+            
+            <div class="p-6 md:p-10">
+                <form id="viewer-form" class="space-y-8" onsubmit="submitForm(event)">
+                    <div id="viewer-fields-container" class="space-y-6">
+                        <!-- Questions injected here -->
+                    </div>
+                    
+                    <div class="pt-6 border-t border-gray-100 flex justify-between items-center">
+                        <button type="button" onclick="navigate('dashboard')" class="text-gray-500 hover:text-ocp-blue font-semibold">Back</button>
+                        <button type="submit" id="viewer-submit-btn" class="bg-ocp-orange text-white px-8 py-3 rounded shadow-md font-bold hover:bg-orange-600 transition text-lg">Submit Response</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Custom Modal for Alerts -->
+    <div id="custom-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center px-4">
+        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full text-center transform scale-95 transition-transform duration-300">
+            <h3 id="modal-title" class="text-xl font-bold text-ocp-blue mb-2">Notification</h3>
+            <p id="modal-message" class="text-gray-600 mb-6 whitespace-pre-wrap"></p>
+            <button onclick="closeModal()" class="w-full bg-ocp-blue text-white font-semibold py-2 rounded hover:bg-blue-800 transition">OK</button>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirm-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center px-4">
+        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full text-center transform scale-95 transition-transform duration-300">
+            <h3 id="confirm-title" class="text-xl font-bold text-ocp-blue mb-2">Confirm Action</h3>
+            <p id="confirm-message" class="text-gray-600 mb-6"></p>
+            <div class="flex gap-3 justify-center">
+                <button onclick="closeConfirm()" class="flex-1 bg-gray-200 text-gray-700 font-semibold py-2 rounded hover:bg-gray-300 transition">Cancel</button>
+                <button id="confirm-btn" class="flex-1 bg-red-500 text-white font-semibold py-2 rounded hover:bg-red-600 transition">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Prefill Link Generator Modal -->
+    <div id="prefill-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center px-4">
+        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-lg w-full transform scale-95 transition-transform duration-300 flex flex-col max-h-[90vh]">
+            <h3 class="text-xl font-bold text-ocp-blue mb-2">Generate Prefill Link</h3>
+            <p class="text-gray-600 mb-4 text-sm">Enter values below to generate a link that automatically pre-fills the form for the user.</p>
+            
+            <div id="prefill-fields" class="space-y-3 overflow-y-auto flex-grow pr-2 mb-4">
+                <!-- Fields injected here -->
+            </div>
+            
+            <div class="mt-auto border-t border-gray-200 pt-4">
+                <label class="block text-sm font-semibold mb-1 text-ocp-blue">Generated Link</label>
+                <div class="flex gap-2">
+                    <input type="text" id="prefill-output" readonly class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded text-sm text-gray-700 outline-none">
+                    <button onclick="copyPrefillOutput()" class="bg-ocp-blue text-white px-4 py-2 rounded font-semibold hover:bg-blue-800 transition shadow-sm">Copy</button>
+                </div>
+            </div>
+            
+            <div class="mt-4 flex justify-end">
+                <button onclick="closePrefillGenerator()" class="text-gray-500 hover:text-gray-800 font-semibold py-2 px-4">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, setDoc, query, where, onSnapshot, serverTimestamp, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // User provided Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDmj_FLrvabd3ApqY7C-D0_GVWi3Ozrs-g",
+            authDomain: "ocp-forms-49ee5.firebaseapp.com",
+            projectId: "ocp-forms-49ee5",
+            storageBucket: "ocp-forms-49ee5.firebasestorage.app",
+            messagingSenderId: "188502892396",
+            appId: "1:188502892396:web:c15075c22b68be00315d49"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Strict Paths
+        const APP_ID = 'ocp-forms';
+        const FORMS_PATH = `artifacts/${APP_ID}/public/data/forms`;
+        const RESPONSES_PATH = `artifacts/${APP_ID}/public/data/responses`;
+
+        // Global State
+        let currentUser = null;
+        let isAdmin = false;
+        let currentForms = [];
+        let formBuilderFields = [];
+        
+        let activeFormId = null;
+        let activeFormDefinition = null;
+        
+        // Admin View State
+        let activeAdminFormId = null;
+        let activeAdminResponses = [];
+        let confirmActionCallback = null;
+
+        // --- Initialize EmailJS ---
+        emailjs.init({ publicKey: "oZPsc8Mlz5cHM5_5V" });
+
+        // --- Core UI Functions ---
+        window.navigate = (viewId, param = null) => {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(`view-${viewId}`).classList.add('active');
+            
+            try {
+                if ((viewId === 'form' || viewId === 'form-admin') && param) {
+                    window.history.pushState({}, '', `?form=${param}`);
+                } else {
+                    window.history.pushState({}, '', window.location.pathname);
+                }
+            } catch (e) {
+                console.warn("history.pushState blocked by environment.");
+            }
+
+            if (viewId === 'form' && param) loadFormToView(param);
+            if (viewId === 'form-admin' && param) loadFormAdminData(param);
+            if (viewId === 'dashboard') loadDashboardData();
+            if (viewId === 'builder') initBuilder();
+        };
+
+        window.previewActiveForm = () => {
+            if (activeAdminFormId) navigate('form', activeAdminFormId);
+        };
+
+        window.showModal = (title, message) => {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-message').innerText = message;
+            document.getElementById('custom-modal').classList.remove('hidden');
+        };
+
+        window.closeModal = () => {
+            document.getElementById('custom-modal').classList.add('hidden');
+        };
+
+        window.showConfirm = (title, message, callback) => {
+            document.getElementById('confirm-title').innerText = title;
+            document.getElementById('confirm-message').innerText = message;
+            confirmActionCallback = callback;
+            document.getElementById('confirm-modal').classList.remove('hidden');
+        };
+
+        window.closeConfirm = () => {
+            document.getElementById('confirm-modal').classList.add('hidden');
+            confirmActionCallback = null;
+        };
+
+        document.getElementById('confirm-btn').addEventListener('click', () => {
+            if (confirmActionCallback) confirmActionCallback();
+            closeConfirm();
+        });
+
+        const toggleLoader = (show) => {
+            document.getElementById('global-loader').style.display = show ? 'flex' : 'none';
+        };
+
+        // --- Auth Functions ---
+        const initAuth = async () => {
+            toggleLoader(true);
+            
+            try {
+                if (!auth.currentUser && !window.location.href.includes('mode=select')) {
+                    await signInAnonymously(auth);
+                }
+            } catch (e) {}
+
+            onAuthStateChanged(auth, (user) => {
+                currentUser = user;
+                isAdmin = user && user.email && user.email.endsWith('@rpeak.org');
+                
+                updateAuthUI();
+                
+                const urlParams = new URLSearchParams(window.location.search);
+                const requestedForm = urlParams.get('form');
+                
+                if (requestedForm) {
+                    // If Admin navigates to a form link directly, usually they want to take it too, 
+                    // but we will route them to taking it initially for ease of testing URLs.
+                    navigate('form', requestedForm);
+                } else {
+                    navigate('dashboard');
+                }
+                toggleLoader(false);
+            });
+        };
+
+        const updateAuthUI = () => {
+            const container = document.getElementById('auth-nav-container');
+            if (currentUser && !currentUser.isAnonymous) {
+                container.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm font-semibold text-ocp-blue hidden sm:block">${currentUser.email}</span>
+                        ${isAdmin ? '<span class="bg-ocp-orange text-white text-xs px-2 py-1 rounded font-bold uppercase">Staff</span>' : ''}
+                        <button onclick="handleLogout()" class="text-sm text-gray-500 hover:text-red-500 underline font-semibold">Sign Out</button>
+                    </div>
+                `;
+                document.getElementById('admin-actions').style.display = isAdmin ? 'block' : 'none';
+                document.getElementById('dashboard-subtitle').innerText = isAdmin ? "Manage forms or create new ones." : "Select a form below to submit a response.";
+            } else {
+                container.innerHTML = `
+                    <button onclick="navigate('login')" class="text-sm bg-white border-2 border-ocp-blue text-ocp-blue px-4 py-1.5 rounded font-bold hover:bg-ocp-blue hover:text-white transition">Staff Login</button>
+                `;
+                document.getElementById('admin-actions').style.display = 'none';
+            }
+        };
+
+        window.handleGoogleLogin = async () => {
+            const provider = new GoogleAuthProvider();
+            try { await signInWithPopup(auth, provider); } catch (error) { showAuthError(error); }
+        };
+
+        window.handleEmailLogin = async () => {
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-password').value;
+            if(!email || !pass) return showModal("Error", "Enter email and password.");
+            try { await signInWithEmailAndPassword(auth, email, pass); } catch (error) { showAuthError(error); }
+        };
+
+        const showAuthError = (err) => {
+            document.getElementById('login-error').innerText = err.message;
+            document.getElementById('login-error').classList.remove('hidden');
+        };
+
+        window.handleLogout = async () => {
+            await signOut(auth);
+            navigate('dashboard');
+        };
+
+        // --- Dashboard Data ---
+        const loadDashboardData = async () => {
+            if (!currentUser) return;
+            
+            getDocs(collection(db, FORMS_PATH)).then(snapshot => {
+                currentForms = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderFormsList();
+            }).catch(err => console.error(err));
+
+            getDocs(collection(db, RESPONSES_PATH)).then(snapshot => {
+                const responses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderUserResponsesList(responses);
+            }).catch(err => {});
+        };
+
+        const renderFormsList = () => {
+            const container = document.getElementById('forms-list');
+            const visibleForms = isAdmin ? currentForms : currentForms.filter(f => f.isPublic);
+
+            if (visibleForms.length === 0) {
+                container.innerHTML = `<div class="p-8 text-center bg-white rounded-xl shadow-sm border border-gray-100"><p class="text-gray-500">No active forms available.</p></div>`;
+                return;
+            }
+
+            container.innerHTML = visibleForms.map(form => `
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <h3 class="font-bold text-xl text-ocp-blue">${form.title}</h3>
+                            ${!form.isPublic ? '<span class="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded font-bold uppercase">Internal</span>' : ''}
+                        </div>
+                        <p class="text-gray-600 text-sm line-clamp-2">${form.description || 'No description provided.'}</p>
+                    </div>
+                    ${isAdmin ? `
+                        <button onclick="navigate('form-admin', '${form.id}')" class="shrink-0 bg-ocp-light text-ocp-blue border border-ocp-blue px-6 py-2 rounded font-semibold hover:bg-ocp-blue hover:text-white transition w-full sm:w-auto">
+                            Manage Form
+                        </button>
+                    ` : `
+                        <button onclick="navigate('form', '${form.id}')" class="shrink-0 bg-ocp-orange text-white px-6 py-2 rounded font-semibold hover:bg-orange-600 transition w-full sm:w-auto shadow">
+                            Fill Out Form
+                        </button>
+                    `}
+                </div>
+            `).join('');
+        };
+
+        const renderUserResponsesList = (responses) => {
+            const container = document.getElementById('responses-list');
+            const myResponses = responses.filter(r => r.userId === currentUser.uid);
+
+            if (myResponses.length === 0) {
+                container.innerHTML = `<p class="text-sm text-gray-500 italic">No recent activity.</p>`;
+                return;
+            }
+
+            myResponses.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+
+            container.innerHTML = myResponses.slice(0, 10).map(resp => {
+                const form = currentForms.find(f => f.id === resp.formId);
+                const title = form ? form.title : 'Unknown Form';
+                const date = resp.timestamp ? new Date(resp.timestamp.seconds * 1000).toLocaleDateString() : 'Just now';
+                return `
+                <div class="p-3 border rounded border-gray-100 bg-gray-50">
+                    <p class="font-semibold text-ocp-blue text-sm truncate">${title}</p>
+                    <p class="text-xs text-gray-500 mt-1">Submitted: ${date}</p>
+                </div>`;
+            }).join('');
+        };
+
+        // --- Form Admin View (Specific Responses & Export) ---
+        const loadFormAdminData = async (formId) => {
+            if (!isAdmin) return navigate('dashboard');
+            activeAdminFormId = formId;
+            toggleLoader(true);
+
+            try {
+                // Fetch Form Data
+                const docSnap = await getDoc(doc(db, FORMS_PATH, formId));
+                if (!docSnap.exists()) {
+                    showModal("Error", "Form not found.");
+                    return navigate('dashboard');
+                }
+                activeFormDefinition = docSnap.data();
+                document.getElementById('admin-form-title').innerText = activeFormDefinition.title;
+
+                // Fetch Responses
+                const respSnap = await getDocs(collection(db, RESPONSES_PATH));
+                const allResponses = respSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                activeAdminResponses = allResponses.filter(r => r.formId === formId);
+                activeAdminResponses.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+
+                renderAdminResponsesTable();
+            } catch (e) {
+                console.error(e);
+                showModal("Error", "Could not load form data.");
+            }
+            toggleLoader(false);
+        };
+
+        const renderAdminResponsesTable = () => {
+            document.getElementById('admin-response-count').innerText = activeAdminResponses.length;
+            const head = document.getElementById('admin-table-head');
+            const body = document.getElementById('admin-table-body');
+
+            if(activeAdminResponses.length === 0) {
+                head.innerHTML = '';
+                body.innerHTML = `<tr><td class="p-4 text-center text-gray-500 italic">No responses yet.</td></tr>`;
+                return;
+            }
+
+            // Create Headers dynamically based on form fields (limit to first 4 for UI preview)
+            const fieldsToPreview = activeFormDefinition.fields.slice(0, 4);
+            
+            head.innerHTML = `
+                <tr>
+                    <th class="p-4 text-left">Date</th>
+                    <th class="p-4 text-left">Email</th>
+                    ${fieldsToPreview.map(f => `<th class="p-4 text-left truncate max-w-[150px]">${f.label}</th>`).join('')}
+                    <th class="p-4 text-center">Action</th>
+                </tr>
+            `;
+
+            body.innerHTML = activeAdminResponses.map(resp => {
+                const date = resp.timestamp ? new Date(resp.timestamp.seconds * 1000).toLocaleDateString() : 'N/A';
+                const email = resp.userEmail || 'Anonymous';
+                
+                const answersHtml = fieldsToPreview.map(f => {
+                    let val = resp.answers[f.id] || '-';
+                    if(Array.isArray(val)) val = val.join(', ');
+                    return `<td class="p-4 truncate max-w-[150px]" title="${val}">${val}</td>`;
+                }).join('');
+
+                return `
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="p-4 whitespace-nowrap">${date}</td>
+                    <td class="p-4 text-ocp-blue font-semibold">${email}</td>
+                    ${answersHtml}
+                    <td class="p-4 text-center">
+                        <button onclick="viewFullResponse('${resp.id}')" class="text-ocp-orange hover:underline text-sm font-bold">View</button>
+                        <button onclick="deleteResponse('${resp.id}')" class="text-red-500 hover:underline text-sm font-bold ml-2">Delete</button>
+                    </td>
+                </tr>`;
+            }).join('');
+        };
+
+        window.viewFullResponse = (respId) => {
+            const resp = activeAdminResponses.find(r => r.id === respId);
+            if(!resp) return;
+            
+            let message = `Submitted by: ${resp.userEmail || 'Anonymous'}\n\n`;
+            activeFormDefinition.fields.forEach(f => {
+                let val = resp.answers[f.id] || 'Not answered';
+                if(Array.isArray(val)) val = val.join(', ');
+                message += `${f.label}:\n> ${val}\n\n`;
+            });
+            showModal("Full Response", message);
+        };
+
+        window.deleteResponse = (respId) => {
+            showConfirm("Delete Response", "Are you sure you want to delete this response? This action cannot be undone.", async () => {
+                toggleLoader(true);
+                try {
+                    await deleteDoc(doc(db, RESPONSES_PATH, respId));
+                    // Reload data
+                    loadFormAdminData(activeAdminFormId);
+                } catch (e) {
+                    console.error(e);
+                    showModal("Error", "Could not delete response.");
+                }
+                toggleLoader(false);
+            });
+        };
+
+        window.deleteActiveForm = () => {
+            if(!activeAdminFormId) return;
+            showConfirm("Delete Form", "Are you sure you want to delete this form entirely? This action cannot be undone.", async () => {
+                toggleLoader(true);
+                try {
+                    await deleteDoc(doc(db, FORMS_PATH, activeAdminFormId));
+                    showModal("Deleted", "Form has been successfully deleted.");
+                    navigate('dashboard');
+                } catch(e) {
+                    console.error(e);
+                    showModal("Error", "Could not delete the form. Check permissions.");
+                }
+                toggleLoader(false);
+            });
+        };
+
+        // --- Prefill Link Generator ---
+        window.openPrefillGenerator = () => {
+            if(!activeFormDefinition) return;
+            
+            const container = document.getElementById('prefill-fields');
+            container.innerHTML = activeFormDefinition.fields.map(field => `
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">${field.label}</label>
+                    <input type="text" id="prefill_input_${field.id}" oninput="updatePrefillLink()" class="w-full px-3 py-1.5 rounded border border-gray-300 focus:border-ocp-blue outline-none text-sm" placeholder="Value for ${field.label}">
+                </div>
+            `).join('');
+            
+            updatePrefillLink();
+            document.getElementById('prefill-modal').classList.remove('hidden');
+        };
+
+        window.closePrefillGenerator = () => {
+            document.getElementById('prefill-modal').classList.add('hidden');
+        };
+
+        window.updatePrefillLink = () => {
+            const baseUrl = window.location.href.split('?')[0];
+            let link = `${baseUrl}?form=${activeAdminFormId}`;
+            
+            activeFormDefinition.fields.forEach(field => {
+                const input = document.getElementById(`prefill_input_${field.id}`);
+                if(input && input.value.trim() !== '') {
+                    const queryKey = field.label.replace(/\s+/g, '_');
+                    link += `&${queryKey}=${encodeURIComponent(input.value.trim())}`;
+                }
+            });
+            
+            document.getElementById('prefill-output').value = link;
+        };
+
+        window.copyPrefillOutput = () => {
+            const link = document.getElementById('prefill-output').value;
+            try {
+                navigator.clipboard.writeText(link);
+                closePrefillGenerator();
+                showModal("Copied!", "Prefill link copied to clipboard.");
+            } catch (err) {
+                const dummy = document.createElement("textarea");
+                document.body.appendChild(dummy);
+                dummy.value = link;
+                dummy.select();
+                document.execCommand("copy");
+                document.body.removeChild(dummy);
+                closePrefillGenerator();
+                showModal("Copied!", "Prefill link copied to clipboard.");
+            }
+        };
+
+        window.copyShareLink = () => {
+            const baseUrl = window.location.href.split('?')[0];
+            const link = `${baseUrl}?form=${activeAdminFormId}`;
+            
+            // Try to copy
+            try {
+                navigator.clipboard.writeText(link);
+                showModal("Link Copied!", `Share this link:\n\n${link}\n\nTo pre-fill fields, append variables like: &First_Name=Rylee`);
+            } catch (err) {
+                // Fallback for environments where clipboard API is blocked
+                const dummy = document.createElement("textarea");
+                document.body.appendChild(dummy);
+                dummy.value = link;
+                dummy.select();
+                document.execCommand("copy");
+                document.body.removeChild(dummy);
+                showModal("Link Copied!", `Share this link:\n\n${link}\n\nTo pre-fill fields, append variables like: &First_Name=Rylee`);
+            }
+        };
+
+        window.exportCSV = () => {
+            if(!activeAdminResponses || activeAdminResponses.length === 0) return showModal("Export", "No responses to export.");
+
+            const fields = activeFormDefinition.fields;
+            const headers = ['Timestamp', 'User Email', ...fields.map(f => f.label)];
+            let csv = headers.join(',') + '\n';
+
+            activeAdminResponses.forEach(r => {
+                const date = r.timestamp ? new Date(r.timestamp.seconds * 1000).toLocaleString() : 'N/A';
+                const row = [
+                    `"${date}"`,
+                    `"${r.userEmail || 'Anonymous'}"`,
+                    ...fields.map(f => {
+                        let val = r.answers[f.id] || '';
+                        if(Array.isArray(val)) val = val.join('; ');
+                        return `"${val.toString().replace(/"/g, '""')}"`;
+                    })
+                ];
+                csv += row.join(',') + '\n';
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Responses_${activeFormDefinition.title.replace(/\s+/g, '_')}.csv`;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        };
+
+
+        // --- Form Builder (Admin) ---
+        const initBuilder = () => {
+            document.getElementById('builder-title').value = '';
+            document.getElementById('builder-desc').value = '';
+            formBuilderFields = [];
+            addBuilderField();
+        };
+
+        window.addBuilderField = () => {
+            formBuilderFields.push({
+                id: 'field_' + Date.now(),
+                type: 'text',
+                label: '',
+                required: false,
+                options: '' 
+            });
+            renderBuilderFields();
+        };
+
+        window.removeBuilderField = (id) => {
+            formBuilderFields = formBuilderFields.filter(f => f.id !== id);
+            renderBuilderFields();
+        };
+
+        window.updateBuilderField = (id, key, value) => {
+            const field = formBuilderFields.find(f => f.id === id);
+            if(field) field[key] = value;
+            if(key === 'type') renderBuilderFields();
+        };
+
+        const renderBuilderFields = () => {
+            const container = document.getElementById('builder-fields-container');
+            container.innerHTML = formBuilderFields.map((field, index) => `
+                <div class="bg-white p-4 rounded border border-gray-200 shadow-sm relative">
+                    <button onclick="removeBuilderField('${field.id}')" class="absolute top-2 right-2 text-red-400 hover:text-red-600 text-xl font-bold">&times;</button>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-semibold text-gray-500 mb-1">Question Label</label>
+                            <input type="text" value="${field.label}" onchange="updateBuilderField('${field.id}', 'label', this.value)" class="w-full px-3 py-1.5 rounded border border-gray-300 focus:border-ocp-orange outline-none text-sm" placeholder="e.g. First Name">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1">Answer Type</label>
+                            <select onchange="updateBuilderField('${field.id}', 'type', this.value)" class="w-full px-3 py-1.5 rounded border border-gray-300 focus:border-ocp-orange outline-none text-sm bg-white">
+                                <option value="text" ${field.type === 'text' ? 'selected' : ''}>Short Text</option>
+                                <option value="paragraph" ${field.type === 'paragraph' ? 'selected' : ''}>Paragraph</option>
+                                <option value="email" ${field.type === 'email' ? 'selected' : ''}>Email Address</option>
+                                <option value="date" ${field.type === 'date' ? 'selected' : ''}>Date Picker</option>
+                                <option value="radio" ${field.type === 'radio' ? 'selected' : ''}>Multiple Choice (One)</option>
+                                <option value="checkbox" ${field.type === 'checkbox' ? 'selected' : ''}>Checkboxes (Multiple)</option>
+                                <option value="dropdown" ${field.type === 'dropdown' ? 'selected' : ''}>Dropdown</option>
+                            </select>
+                        </div>
+                    </div>
+                    ${['radio', 'checkbox', 'dropdown'].includes(field.type) ? `
+                        <div class="mb-3">
+                            <label class="block text-xs font-semibold text-gray-500 mb-1">Options (Comma separated)</label>
+                            <input type="text" value="${field.options}" onchange="updateBuilderField('${field.id}', 'options', this.value)" class="w-full px-3 py-1.5 rounded border border-gray-300 outline-none text-sm" placeholder="Option A, Option B, Option C">
+                        </div>
+                    ` : ''}
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="req_${field.id}" ${field.required ? 'checked' : ''} onchange="updateBuilderField('${field.id}', 'required', this.checked)">
+                        <label for="req_${field.id}" class="text-xs text-gray-600 font-semibold cursor-pointer">Required Field</label>
+                    </div>
+                </div>
+            `).join('');
+        };
+
+        window.saveForm = async () => {
+            const title = document.getElementById('builder-title').value.trim();
+            const desc = document.getElementById('builder-desc').value.trim();
+            const isPublic = document.getElementById('builder-public').value === 'true';
+
+            if (!title) return showModal("Validation", "Form Title is required.");
+            if (formBuilderFields.length === 0) return showModal("Validation", "Add at least one field.");
+
+            const formData = {
+                title, description: desc, isPublic, fields: formBuilderFields,
+                createdAt: serverTimestamp(), createdBy: currentUser.uid
+            };
+
+            toggleLoader(true);
+            try {
+                await addDoc(collection(db, FORMS_PATH), formData);
+                showModal("Success", "Form published successfully!");
+                navigate('dashboard');
+            } catch (err) {
+                showModal("Error", "Could not save form. Check permissions.");
+            }
+            toggleLoader(false);
+        };
+
+        // --- Form Viewer (Taking form & Magic Prefill) ---
+        const loadFormToView = async (formId) => {
+            activeFormId = formId;
+            toggleLoader(true);
+            try {
+                const docSnap = await getDoc(doc(db, FORMS_PATH, formId));
+                if (docSnap.exists()) {
+                    activeFormDefinition = docSnap.data();
+                    renderViewer();
+                } else {
+                    showModal("Not Found", "This form does not exist.");
+                    navigate('dashboard');
+                }
+            } catch (err) {
+                showModal("Access Denied", "You do not have permission to view this form.");
+                navigate('dashboard');
+            }
+            toggleLoader(false);
+        };
+
+        const renderViewer = () => {
+            document.getElementById('viewer-title').innerText = activeFormDefinition.title;
+            document.getElementById('viewer-desc').innerText = activeFormDefinition.description || '';
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const savedDraft = JSON.parse(localStorage.getItem(`draft_${activeFormId}`) || '{}');
+            document.getElementById('draft-indicator').style.display = Object.keys(savedDraft).length > 0 ? 'flex' : 'none';
+
+            const container = document.getElementById('viewer-fields-container');
+            container.innerHTML = activeFormDefinition.fields.map((field, idx) => {
+                
+                // Magic Link Prefill Logic: Check URL for Exact Label or Underscored_Label
+                const queryKey = field.label.replace(/\s+/g, '_'); 
+                const prefillVal = urlParams.get(field.label) || urlParams.get(queryKey) || '';
+                
+                // Draft takes priority over prefill
+                let valToUse = savedDraft[field.id] !== undefined ? savedDraft[field.id] : prefillVal;
+                
+                const reqAttr = field.required ? 'required' : '';
+                const reqStar = field.required ? '<span class="text-red-500">*</span>' : '';
+                const baseClasses = "w-full px-4 py-3 rounded bg-gray-50 border border-gray-300 focus:bg-white focus:border-ocp-blue focus:ring-1 focus:ring-ocp-blue outline-none transition";
+                
+                let inputHtml = '';
+                
+                if (field.type === 'text') {
+                    inputHtml = `<input type="text" name="${field.id}" value="${valToUse}" ${reqAttr} oninput="saveDraft()" class="${baseClasses}">`;
+                } else if (field.type === 'email') {
+                    inputHtml = `<input type="email" name="${field.id}" value="${valToUse}" ${reqAttr} oninput="saveDraft()" class="${baseClasses}">`;
+                } else if (field.type === 'date') {
+                    inputHtml = `<input type="date" name="${field.id}" value="${valToUse}" ${reqAttr} onchange="saveDraft()" class="${baseClasses}">`;
+                } else if (field.type === 'paragraph') {
+                    inputHtml = `<textarea name="${field.id}" rows="3" ${reqAttr} oninput="saveDraft()" class="${baseClasses}">${valToUse}</textarea>`;
+                } else if (field.type === 'dropdown') {
+                    const opts = (field.options || '').split(',').map(o => o.trim()).filter(o => o);
+                    inputHtml = `<select name="${field.id}" ${reqAttr} onchange="saveDraft()" class="${baseClasses} bg-white">
+                        <option value="">Select an option...</option>
+                        ${opts.map(o => `<option value="${o}" ${valToUse === o ? 'selected' : ''}>${o}</option>`).join('')}
+                    </select>`;
+                } else if (field.type === 'radio') {
+                    const opts = (field.options || '').split(',').map(o => o.trim()).filter(o => o);
+                    inputHtml = `<div class="space-y-2 mt-2">` + opts.map(opt => `
+                        <label class="flex items-center gap-3 cursor-pointer p-3 border border-gray-200 rounded hover:bg-gray-50 transition">
+                            <input type="radio" name="${field.id}" value="${opt}" ${valToUse === opt ? 'checked' : ''} ${reqAttr} onchange="saveDraft()" class="w-4 h-4 text-ocp-blue border-gray-300 focus:ring-ocp-blue">
+                            <span class="text-gray-700">${opt}</span>
+                        </label>
+                    `).join('') + `</div>`;
+                } else if (field.type === 'checkbox') {
+                    const opts = (field.options || '').split(',').map(o => o.trim()).filter(o => o);
+                    // Checkboxes prefill uses arrays or comma-separated strings
+                    const valArray = Array.isArray(valToUse) ? valToUse : valToUse.split(',').map(v=>v.trim());
+                    
+                    inputHtml = `<div class="space-y-2 mt-2">` + opts.map(opt => `
+                        <label class="flex items-center gap-3 cursor-pointer p-3 border border-gray-200 rounded hover:bg-gray-50 transition">
+                            <input type="checkbox" name="${field.id}" value="${opt}" ${valArray.includes(opt) ? 'checked' : ''} onchange="saveDraft()" class="w-4 h-4 rounded text-ocp-blue border-gray-300 focus:ring-ocp-blue">
+                            <span class="text-gray-700">${opt}</span>
+                        </label>
+                    `).join('') + `</div>`;
+                }
+
+                return `
+                    <div class="form-group">
+                        <label class="block text-lg font-semibold text-ocp-blue mb-2">${idx + 1}. ${field.label} ${reqStar}</label>
+                        ${inputHtml}
+                    </div>
+                `;
+            }).join('');
+        };
+
+        window.saveDraft = () => {
+            if(!activeFormId) return;
+            const formEl = document.getElementById('viewer-form');
+            const formData = new FormData(formEl);
+            
+            const data = {};
+            // Handle multiple values for checkboxes natively
+            for (let [key, value] of formData.entries()) {
+                if (data[key]) {
+                    if (!Array.isArray(data[key])) data[key] = [data[key]];
+                    data[key].push(value);
+                } else {
+                    data[key] = value;
+                }
+            }
+            
+            localStorage.setItem(`draft_${activeFormId}`, JSON.stringify(data));
+            document.getElementById('draft-indicator').style.display = 'flex';
+        };
+
+        window.submitForm = async (e) => {
+            e.preventDefault();
+            
+            const formEl = document.getElementById('viewer-form');
+            const formData = new FormData(formEl);
+            const answers = {};
+            
+            for (let [key, value] of formData.entries()) {
+                if (answers[key]) {
+                    if (!Array.isArray(answers[key])) answers[key] = [answers[key]];
+                    answers[key].push(value);
+                } else {
+                    answers[key] = value;
+                }
+            }
+
+            // Custom Checkbox validation (HTML5 doesn't enforce "at least one" easily for grouped checkboxes)
+            const requiredFields = activeFormDefinition.fields.filter(f => f.required && f.type === 'checkbox');
+            for(let f of requiredFields) {
+                if(!answers[f.id] || answers[f.id].length === 0) {
+                    return showModal("Required Field", `Please check at least one option for: ${f.label}`);
+                }
+            }
+
+            const submission = {
+                formId: activeFormId,
+                userId: currentUser ? currentUser.uid : 'anonymous',
+                userEmail: currentUser && !currentUser.isAnonymous ? currentUser.email : null,
+                answers: answers,
+                timestamp: serverTimestamp()
+            };
+
+            const btn = document.getElementById('viewer-submit-btn');
+            const originalText = btn.innerText;
+            btn.innerText = 'Submitting...';
+            btn.disabled = true;
+
+            try {
+                await addDoc(collection(db, RESPONSES_PATH), submission);
+                localStorage.removeItem(`draft_${activeFormId}`);
+                triggerAutoEmail(submission.userEmail, activeFormDefinition.title);
+                
+                showModal("Response Recorded", "Thank you! Your response has been securely submitted.");
+                navigate('dashboard');
+            } catch (err) {
+                showModal("Error", "Could not submit response. Please try again later.");
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        };
+
+        // --- EmailJS Execution ---
+        const triggerAutoEmail = (userEmail, formTitle) => {
+            if (!userEmail) return; 
+            
+            // To activate, replace the strings below:
+            const SERVICE_ID = "service_0b0efdt"; 
+            const TEMPLATE_ID = "template_hd5pbyk";
+
+            if (SERVICE_ID !== "YOUR_SERVICE_ID") {
+                emailjs.send(SERVICE_ID, TEMPLATE_ID, {
+                    to_email: userEmail,
+                    subject: `Submission Received: ${formTitle}`,
+                    form_title: formTitle,
+                    message: `Thank you for your submission to the Office of Commissioner Rylee Peak.`
+                }).then(() => {
+                    console.log("Auto-email sent successfully.");
+                }).catch(err => {
+                    console.error("Failed to send auto-email", err);
+                });
+            } else {
+                console.log(`[EmailJS] Configured but waiting for Service/Template IDs to send to ${userEmail}`);
+            }
+        };
+
+        window.onload = initAuth;
+
+    </script>
+</body>
+</html>
