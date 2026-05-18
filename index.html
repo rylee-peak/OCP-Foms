@@ -730,8 +730,8 @@
             activeFormDefinition.fields.forEach(field => {
                 const input = document.getElementById(`prefill_input_${field.id}`);
                 if(input && input.value.trim() !== '') {
-                    const queryKey = field.label.replace(/\s+/g, '_');
-                    link += `&${queryKey}=${encodeURIComponent(input.value.trim())}`;
+                    // Update: Append using the unique field.id directly instead of the label
+                    link += `&${field.id}=${encodeURIComponent(input.value.trim())}`;
                 }
             });
             
@@ -763,7 +763,7 @@
             // Try to copy
             try {
                 navigator.clipboard.writeText(link);
-                showModal("Link Copied!", `Share this link:\n\n${link}\n\nTo pre-fill fields, append variables like: &First_Name=Rylee`);
+                showModal("Link Copied!", `Share this link:\n\n${link}\n\nTo pre-fill fields, use the "Generate Prefill Link" button.`);
             } catch (err) {
                 // Fallback for environments where clipboard API is blocked
                 const dummy = document.createElement("textarea");
@@ -772,7 +772,7 @@
                 dummy.select();
                 document.execCommand("copy");
                 document.body.removeChild(dummy);
-                showModal("Link Copied!", `Share this link:\n\n${link}\n\nTo pre-fill fields, append variables like: &First_Name=Rylee`);
+                showModal("Link Copied!", `Share this link:\n\n${link}\n\nTo pre-fill fields, use the "Generate Prefill Link" button.`);
             }
         };
 
@@ -931,9 +931,10 @@
             const container = document.getElementById('viewer-fields-container');
             container.innerHTML = activeFormDefinition.fields.map((field, idx) => {
                 
-                // Magic Link Prefill Logic: Check URL for Exact Label or Underscored_Label
-                const queryKey = field.label.replace(/\s+/g, '_'); 
-                const prefillVal = urlParams.get(field.label) || urlParams.get(queryKey) || '';
+                // Update: Magic Link Prefill Logic now checks for field.id. 
+                // We leave legacyQueryKey support for any links generated prior to this update.
+                const legacyQueryKey = field.label.replace(/\s+/g, '_'); 
+                const prefillVal = urlParams.get(field.id) || urlParams.get(field.label) || urlParams.get(legacyQueryKey) || '';
                 
                 // Draft takes priority over prefill
                 let valToUse = savedDraft[field.id] !== undefined ? savedDraft[field.id] : prefillVal;
